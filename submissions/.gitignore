@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environment
+.venv/
+
+# Secrets / sensitive files
+.env
+private_key.pem
+
+# Hidden evaluation files
+leaderboard/test_labels_hidden.csv
+
+# Submissions (generated files)
+submissions/*.csv
+
+# *.csv  <-- removed
+
+
+# data/*.csv 
