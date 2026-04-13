@@ -5,7 +5,7 @@ A lightweight machine learning project to evaluate **model robustness under feat
 ---
 
  ## 🏆 Live Leaderboard
- [Open Leaderboard](https://vforviolet10.github.io/Graph-Robustness-Checker-using-Logistic-Regression/index.html)
+ [Open Leaderboard](https://vforviolet10.github.io/Graph-Robustness-Checker-using-Logistic-Regression/docs/index.html)
 
 ## Overview
 
