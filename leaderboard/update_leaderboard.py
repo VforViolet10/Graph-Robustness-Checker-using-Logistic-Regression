@@ -6,6 +6,9 @@ from datetime import datetime
 LEADERBOARD_PATH = "leaderboard/leaderboard.csv"
 SUBMISSIONS_PATH = "submissions"
 
+df.to_csv("leaderboard/leaderboard.csv", index=False)
+df.to_csv("leaderboard/static/leaderboard.csv", index=False)
+
 def update_leaderboard():
     results = []
 
