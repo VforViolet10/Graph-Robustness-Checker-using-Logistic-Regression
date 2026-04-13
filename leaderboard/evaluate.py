@@ -1,22 +1,30 @@
 import pandas as pd
-from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
 
-def evaluate(team_folder):
-    # Load true labels
-    true = pd.read_csv("data/test_labels_hidden.csv")
+# Load files
+y_true = pd.read_csv("data/test.csv")
+y_pred = pd.read_csv("submission.csv")
 
-    # Load submissions
-    ideal = pd.read_csv(f"{team_folder}/ideal_submission.csv")
-    perturbed = pd.read_csv(f"{team_folder}/perturbed_submission.csv")
+# Calculate score
+score = accuracy_score(y_true["target"], y_pred["target"])
 
-    # Merge
-    ideal = ideal.merge(true, on="graph_index")
-    perturbed = perturbed.merge(true, on="graph_index")
+# Get username
+import os
+username = os.getenv("GITHUB_ACTOR")
 
-    # Compute F1
-    f1_ideal = f1_score(ideal["label_y"], ideal["label_x"], average="macro")
-    f1_perturbed = f1_score(perturbed["label_y"], perturbed["label_x"], average="macro")
+# Load leaderboard
+lb = pd.read_csv("data/leaderboard.csv")
 
-    gap = f1_ideal - f1_perturbed
+# Append new score
+new_row = pd.DataFrame([{
+    "username": username,
+    "score": score
+}])
 
-    return round(f1_ideal, 4), round(f1_perturbed, 4), round(gap, 4)
+lb = pd.concat([lb, new_row])
+
+# Sort leaderboard
+lb = lb.sort_values(by="score", ascending=False)
+
+# Save
+lb.to_csv("data/leaderboard.csv", index=False)
