@@ -54,15 +54,11 @@ tr:hover {
     background: #f9f9f9;
 }
 
-/* Rank styling */
-.rank-1 { font-weight: bold; }
-.rank-2 { font-weight: bold; }
-.rank-3 { font-weight: bold; }
-
 /* Tabs */
 .tabs {
     display: flex;
     margin-bottom: 20px;
+    gap: 10px;
 }
 
 .tab {
@@ -70,6 +66,7 @@ tr:hover {
     border: 1px solid #ddd;
     cursor: pointer;
     background: #fafafa;
+    border-radius: 6px;
 }
 
 .tab.active {
@@ -98,8 +95,12 @@ tr:hover {
 
     <!-- Tabs -->
     <div class="tabs">
-        <div class="tab active" onclick="loadData('leaderboard.csv')">Public Leaderboard</div>
-        <div class="tab" onclick="loadData('private.csv')">Private Leaderboard</div>
+        <div class="tab active" onclick="loadData('leaderboard.csv', this)">
+            Public Leaderboard
+        </div>
+        <div class="tab" onclick="loadData('private.csv', this)">
+            Private Leaderboard
+        </div>
     </div>
 
     <!-- Table -->
@@ -123,31 +124,40 @@ tr:hover {
 </div>
 
 <script>
-function loadData(file) {
-    fetch(file)
-    .then(res => res.text())
-    .then(data => {
-        const rows = data.split('\\n').slice(1);
-        let parsed = rows.map(r => r.split(','));
+function loadData(file, element = null) {
 
-        // Sort by score DESC
+    fetch("data/" + file)
+    .then(res => {
+        if (!res.ok) throw new Error("File not found");
+        return res.text();
+    })
+    .then(data => {
+
+        const rows = data.trim().split("\n").slice(1);
+
+        let parsed = rows
+            .map(r => r.split(","))
+            .filter(row => row.length >= 4);
+
+        // Sort by SCORE (column 2)
         parsed.sort((a, b) => parseFloat(b[2]) - parseFloat(a[2]));
 
         const table = document.querySelector("#leaderboard tbody");
         table.innerHTML = "";
 
         parsed.forEach((row, index) => {
-            if (row.length < 4) return;
 
-            let rank = index + 1;
-            let medal = rank === 1 ? "🥇" :
-                        rank === 2 ? "🥈" :
-                        rank === 3 ? "🥉" : rank;
+            const rank = index + 1;
 
-            let tr = document.createElement("tr");
+            const medal =
+                rank === 1 ? "🥇" :
+                rank === 2 ? "🥈" :
+                rank === 3 ? "🥉" : rank;
+
+            const tr = document.createElement("tr");
 
             tr.innerHTML = `
-                <td class="rank-${rank}">${medal}</td>
+                <td>${medal}</td>
                 <td>${row[0]}</td>
                 <td>${row[1]}</td>
                 <td>${parseFloat(row[2]).toFixed(4)}</td>
@@ -157,14 +167,24 @@ function loadData(file) {
             table.appendChild(tr);
         });
 
-        // Tab switching UI
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        event.target.classList.add("active");
+        // Active tab UI
+        document.querySelectorAll(".tab")
+            .forEach(t => t.classList.remove("active"));
+
+        if (element) element.classList.add("active");
+
+    })
+    .catch(err => {
+        console.error(err);
+        document.querySelector("#leaderboard tbody").innerHTML =
+            "<tr><td colspan='5'>⚠️ Failed to load leaderboard</td></tr>";
     });
 }
 
-// Load default
-loadData('leaderboard.csv');
+// Load default leaderboard
+document.addEventListener("DOMContentLoaded", () => {
+    loadData("leaderboard.csv");
+});
 </script>
 
 </body>
