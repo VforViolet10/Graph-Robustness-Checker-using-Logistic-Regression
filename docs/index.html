@@ -128,19 +128,18 @@ tr:hover {
 </div>
 
 <script>
-function loadData(file, element = null) {
+function loadData(file) {
 
-    fetch(file)   // IMPORTANT: /docs folder → NO /data prefix
+    fetch(file)
     .then(res => res.text())
     .then(data => {
 
         const rows = data.trim().split("\n").slice(1);
 
-        let parsed = rows
-            .map(r => r.split(","))
-            .filter(r => r.length >= 4);
+        let parsed = rows.map(r => r.split(","));
 
-        parsed.sort((a, b) => parseFloat(b[2]) - parseFloat(a[2]));
+        // Sort by robustness_gap (lower is better)
+        parsed.sort((a, b) => parseFloat(a[4]) - parseFloat(b[4]));
 
         const table = document.getElementById("board");
         table.innerHTML = "";
@@ -157,18 +156,13 @@ function loadData(file, element = null) {
             table.innerHTML += `
                 <tr>
                     <td>${medal}</td>
-                    <td>${row[0]}</td>
-                    <td>${row[1]}</td>
-                    <td>${parseFloat(row[2]).toFixed(4)}</td>
-                    <td>${row[3]}</td>
+                    <td>${row[1]}</td> <!-- team -->
+                    <td>${parseFloat(row[2]).toFixed(3)}</td> <!-- f1_ideal -->
+                    <td>${parseFloat(row[3]).toFixed(3)}</td> <!-- f1_perturbed -->
+                    <td>${parseFloat(row[4]).toFixed(3)}</td> <!-- gap -->
                 </tr>
             `;
         });
-
-        document.querySelectorAll(".tab")
-            .forEach(t => t.classList.remove("active"));
-
-        if (element) element.classList.add("active");
 
     })
     .catch(err => {
@@ -178,11 +172,7 @@ function loadData(file, element = null) {
     });
 }
 
-// default load
 document.addEventListener("DOMContentLoaded", () => {
     loadData("leaderboard.csv");
 });
 </script>
-
-</body>
-</html>
