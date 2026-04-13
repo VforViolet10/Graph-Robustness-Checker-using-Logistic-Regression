@@ -3,6 +3,11 @@
 A lightweight machine learning project to evaluate **model robustness under feature perturbations**, inspired by large-scale ML competitions.
 
 ---
+## 🏆 Live Leaderboard
+
+<a href="https://vforviolet10.github.io/Graph-Robustness-Checker-using-Logistic-Regression/" target="_blank">
+  <img src="https://img.shields.io/badge/Open-Leaderboard-blue?style=for-the-badge&logo=github">
+</a>
 
  ## 🏆 Live Leaderboard
  [Open Leaderboard](https://vforviolet10.github.io/Graph-Robustness-Checker-using-Logistic-Regression/index.html)
