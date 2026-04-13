@@ -1,191 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Graph Robustness Leaderboard</title>
-
-<style>
-body {
-    font-family: "Segoe UI", Arial;
-    margin: 0;
-    background: #ffffff;
-    color: #111;
-}
-
-/* Header */
-.header {
-    padding: 20px;
-    text-align: center;
-    border-bottom: 2px solid #eee;
-}
-
-.header h1 {
-    margin: 0;
-    font-size: 28px;
-}
-
-/* Container */
-.container {
-    width: 90%;
-    margin: auto;
-    margin-top: 30px;
-}
-
-/* Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 15px;
-}
-
-th {
-    background: #f5f5f5;
-    padding: 12px;
-    text-align: left;
-    border-bottom: 2px solid #ddd;
-}
-
-td {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-}
-
-tr:hover {
-    background: #f9f9f9;
-}
-
-/* Tabs */
-.tabs {
-    display: flex;
-    margin-bottom: 20px;
-    gap: 10px;
-}
-
-.tab {
-    padding: 10px 20px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background: #fafafa;
-    border-radius: 6px;
-}
-
-.tab.active {
-    background: #2563eb;
-    color: white;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    margin: 30px;
-    font-size: 13px;
-    color: #777;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA Challenge - Leaderboard</title>
+    <link rel="stylesheet" href="leaderboard.css">
 </head>
-
 <body>
-
-<div class="header">
-    <h1>🏆 Graph Robustness Leaderboard</h1>
-    <p>Inspired by GTA Graph Topology Ablation</p>
-</div>
-
-<div class="container">
-
-    <!-- Tabs -->
-    <div class="tabs">
-        <div class="tab active" onclick="loadData('leaderboard.csv', this)">
-            Public Leaderboard
+    <canvas id="graph-canvas"></canvas>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🏆 GTA Challenge Leaderboard</h1>
+            <p>Graph Topology Ablation – GNN Competition</p>
         </div>
-        <div class="tab" onclick="loadData('private.csv', this)">
-            Private Leaderboard
+        <p class="last-updated" id="last-updated">Loading...</p>
+        
+        <div class="leaderboard">
+            <table>
+                <thead id="table-header">
+                    <tr>
+                        <th class="rank">Rank</th>
+                        <th>Team</th>
+                        <th>F1 (Ideal)</th>
+                        <th>F1 (Perturbed)</th>
+                        <th>Robustness Gap</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="100%" class="empty">Loading leaderboard data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>Submit your solution via Pull Request to appear on the leaderboard!</p>
+            <p style="margin-top: 10px; font-size: 0.95em;">
+                <a href="https://github.com/idrees11/GTA-Graph-Topology-Ablation_-GTA-"  
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                    🔗 View Repository on GitHub
+                </a>
+            </p>
         </div>
     </div>
-
-    <!-- Table -->
-    <table id="leaderboard">
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Username</th>
-                <th>Model</th>
-                <th>Score</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-</div>
-
-<div class="footer">
-    Built for Graph Robustness Challenge 🚀
-</div>
-
-<script>
-function loadData(file, element = null) {
-
-    fetch("data/" + file)
-    .then(res => {
-        if (!res.ok) throw new Error("File not found");
-        return res.text();
-    })
-    .then(data => {
-
-        const rows = data.trim().split("\n").slice(1);
-
-        let parsed = rows
-            .map(r => r.split(","))
-            .filter(row => row.length >= 4);
-
-        // Sort by SCORE (column 2)
-        parsed.sort((a, b) => parseFloat(b[2]) - parseFloat(a[2]));
-
-        const table = document.querySelector("#leaderboard tbody");
-        table.innerHTML = "";
-
-        parsed.forEach((row, index) => {
-
-            const rank = index + 1;
-
-            const medal =
-                rank === 1 ? "🥇" :
-                rank === 2 ? "🥈" :
-                rank === 3 ? "🥉" : rank;
-
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-                <td>${medal}</td>
-                <td>${row[0]}</td>
-                <td>${row[1]}</td>
-                <td>${parseFloat(row[2]).toFixed(4)}</td>
-                <td>${row[3]}</td>
-            `;
-
-            table.appendChild(tr);
-        });
-
-        // Active tab UI
-        document.querySelectorAll(".tab")
-            .forEach(t => t.classList.remove("active"));
-
-        if (element) element.classList.add("active");
-
-    })
-    .catch(err => {
-        console.error(err);
-        document.querySelector("#leaderboard tbody").innerHTML =
-            "<tr><td colspan='5'>⚠️ Failed to load leaderboard</td></tr>";
-    });
-}
-
-// Load default leaderboard
-document.addEventListener("DOMContentLoaded", () => {
-    loadData("leaderboard.csv");
-});
-</script>
-
+    
+    <script src="leaderboard.js"></script>
 </body>
 </html>
