@@ -1,19 +1,39 @@
 import pandas as pd
 import os
 
-# Load leaderboard
-lb = pd.read_csv("docs/leaderboard.csv")
+# File path
+file_path = "docs/leaderboard.csv"
 
-# Example: fake score (replace with real evaluation)
+# Load leaderboard (create if not exists)
+if os.path.exists(file_path):
+    lb = pd.read_csv(file_path)
+else:
+    lb = pd.DataFrame(columns=["team", "f1_ideal", "f1_perturbed", "gap"])
+
+# Team name from PR
+team_name = os.getenv("GITHUB_ACTOR", "Unknown")
+
+# 🔥 Replace with real evaluation later
+f1_ideal = 0.90
+f1_perturbed = 0.85
+gap = round(f1_ideal - f1_perturbed, 4)
+
+# Create new row
 new_row = {
-    "team": os.getenv("GITHUB_ACTOR"),
-    "f1_ideal": 0.90,
-    "f1_perturbed": 0.85,
-    "robustness_gap": 0.05
+    "team": team_name,
+    "f1_ideal": f1_ideal,
+    "f1_perturbed": f1_perturbed,
+    "gap": gap
 }
 
-lb = pd.concat([lb, pd.DataFrame([new_row])])
+# ❗ Remove old entry of same team (avoid duplicates)
+lb = lb[lb["team"] != team_name]
 
-lb = lb.sort_values(by="f1_perturbed", ascending=False)
+# Add new row
+lb = pd.concat([lb, pd.DataFrame([new_row])], ignore_index=True)
 
-lb.to_csv("docs/leaderboard.csv", index=False)
+# ✅ Sort: lowest gap is best
+lb = lb.sort_values(by="gap", ascending=True)
+
+# Save
+lb.to_csv(file_path, index=False)
