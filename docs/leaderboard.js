@@ -1,37 +1,54 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+
     fetch('leaderboard.csv')
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) throw new Error("File not found");
+            return response.text();
+        })
         .then(csvText => {
 
             const rows = csvText.trim().split('\n');
             const dataRows = rows.slice(1);
 
-            const data = dataRows.map(row => {
-                const cols = row.split(',');
+            // Parse safely
+            let data = dataRows
+                .map(row => {
+                    const cols = row.split(',');
 
-                return {
-                    rank: parseInt(cols[0]),
-                    team: cols[1],
-                    f1Ideal: parseFloat(cols[2]),
-                    f1Pert: parseFloat(cols[3]),
-                    gap: parseFloat(cols[4])
-                };
-            });
+                    if (cols.length < 5) return null;
 
+                    return {
+                        team: cols[1],
+                        f1Ideal: parseFloat(cols[2]),
+                        f1Pert: parseFloat(cols[3]),
+                        gap: parseFloat(cols[4])
+                    };
+                })
+                .filter(d => d !== null && !isNaN(d.gap));
+
+            // ✅ Sort by robustness gap (LOWER = BETTER)
+            data.sort((a, b) => a.gap - b.gap);
+
+            // Last updated
             const now = new Date();
-            document.getElementById('last-updated').textContent =
-                "Last updated: " + now.toLocaleString();
+            const updatedEl = document.getElementById('last-updated');
+            if (updatedEl) {
+                updatedEl.textContent = "Last updated: " + now.toLocaleString();
+            }
 
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
-            data.forEach(entry => {
-                const tr = document.createElement('tr');
+            data.forEach((entry, index) => {
 
-                let rankDisplay = entry.rank;
-                if (entry.rank === 1) rankDisplay = '🥇 1';
-                else if (entry.rank === 2) rankDisplay = '🥈 2';
-                else if (entry.rank === 3) rankDisplay = '🥉 3';
+                const rank = index + 1;
+
+                let rankDisplay =
+                    rank === 1 ? '🥇 1' :
+                    rank === 2 ? '🥈 2' :
+                    rank === 3 ? '🥉 3' : rank;
+
+                const tr = document.createElement('tr');
 
                 tr.innerHTML = `
                     <td class="rank">${rankDisplay}</td>
@@ -43,9 +60,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 tbody.appendChild(tr);
             });
+
+            // If no data
+            if (data.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="5" class="empty">No data available</td></tr>`;
+            }
+
         })
         .catch(error => {
+            console.error(error);
             document.getElementById('table-body').innerHTML =
-                `<tr><td colspan="5" class="empty">Error loading data</td></tr>`;
+                `<tr><td colspan="5" class="empty">⚠️ Error loading leaderboard</td></tr>`;
         });
 });
