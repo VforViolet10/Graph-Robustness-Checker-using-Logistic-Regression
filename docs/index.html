@@ -33,6 +33,25 @@ body {
     margin-top: 30px;
 }
 
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 18px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background: #fafafa;
+    border-radius: 6px;
+}
+
+.tab.active {
+    background: #2563eb;
+    color: white;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -53,25 +72,6 @@ td {
 
 tr:hover {
     background: #f9f9f9;
-}
-
-.tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.tab {
-    padding: 10px 18px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background: #fafafa;
-    border-radius: 6px;
-}
-
-.tab.active {
-    background: #2563eb;
-    color: white;
 }
 
 .footer {
@@ -116,6 +116,8 @@ tr:hover {
         <tbody id="table-body"></tbody>
     </table>
 
+    <p id="last-updated" style="margin-top:10px; color:#666;"></p>
+
 </div>
 
 <div class="footer">
@@ -126,42 +128,59 @@ tr:hover {
 function loadData(file, element = null) {
 
     fetch(file)
-    .then(res => res.text())
-    .then(data => {
+    .then(res => {
+        if (!res.ok) throw new Error("CSV not found");
+        return res.text();
+    })
+    .then(text => {
 
-        const rows = data.trim().split("\n").slice(1);
+        const rows = text.trim().split("\n").slice(1);
 
-        let parsed = rows
+        const data = rows
             .map(r => r.split(","))
-            .filter(r => r.length >= 5);
+            .filter(r => r.length >= 5)
+            .map(r => ({
+                team: r[1],
+                f1Ideal: parseFloat(r[2]),
+                f1Pert: parseFloat(r[3]),
+                gap: parseFloat(r[4])
+            }))
+            .filter(d => !isNaN(d.gap));
 
-        // Sort by robustness_gap (LOWER = BETTER)
-        parsed.sort((a, b) => parseFloat(a[4]) - parseFloat(b[4]));
+        // Sort by robustness gap (LOWER = BETTER)
+        data.sort((a, b) => a.gap - b.gap);
 
-        const table = document.getElementById("board");
-        table.innerHTML = "";
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = "";
 
-        parsed.forEach((row, index) => {
+        data.forEach((entry, i) => {
 
-            const rank = index + 1;
+            const rank = i + 1;
 
             const medal =
                 rank === 1 ? "🥇" :
                 rank === 2 ? "🥈" :
                 rank === 3 ? "🥉" : rank;
 
-            table.innerHTML += `
-                <tr>
-                    <td>${medal}</td>
-                    <td>${row[1]}</td>
-                    <td>${parseFloat(row[2]).toFixed(3)}</td>
-                    <td>${parseFloat(row[3]).toFixed(3)}</td>
-                    <td>${parseFloat(row[4]).toFixed(3)}</td>
-                </tr>
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${medal}</td>
+                <td>${entry.team}</td>
+                <td>${entry.f1Ideal.toFixed(3)}</td>
+                <td>${entry.f1Pert.toFixed(3)}</td>
+                <td>${entry.gap.toFixed(3)}</td>
             `;
+
+            tbody.appendChild(tr);
         });
 
-        // FIX tab highlight
+        // Last updated time
+        const now = new Date();
+        document.getElementById("last-updated").textContent =
+            "Last updated: " + now.toLocaleString();
+
+        // Active tab highlight
         document.querySelectorAll(".tab")
             .forEach(t => t.classList.remove("active"));
 
@@ -170,12 +189,12 @@ function loadData(file, element = null) {
     })
     .catch(err => {
         console.error(err);
-        document.getElementById("board").innerHTML =
+        document.getElementById("table-body").innerHTML =
             "<tr><td colspan='5'>⚠️ Failed to load leaderboard</td></tr>";
     });
 }
 
-// Load default
+// Load default leaderboard
 document.addEventListener("DOMContentLoaded", () => {
     loadData("leaderboard.csv");
 });
