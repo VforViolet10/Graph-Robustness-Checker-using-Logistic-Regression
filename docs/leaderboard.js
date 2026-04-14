@@ -1,13 +1,13 @@
 function loadData(file, element = null) {
 
-    fetch(file)
+    fetch("./" + file)  // ✅ FIXED PATH
         .then(res => {
-            if (!res.ok) throw new Error("CSV not found");
+            if (!res.ok) throw new Error("CSV not found: " + file);
             return res.text();
         })
         .then(text => {
 
-            const rows = text.trim().split("\n").slice(1);
+            const rows = text.trim().split(/\r?\n/).slice(1);
 
             const data = rows
                 .map(r => r.split(","))
@@ -20,17 +20,23 @@ function loadData(file, element = null) {
                 }))
                 .filter(d => !isNaN(d.gap));
 
-            // ✅ Sort by robustness gap (LOWER is better)
-            data.sort((a, b) => a.gap - b.gap);
-
             const tbody = document.getElementById("table-body");
 
             if (!tbody) {
-                console.error("❌ table-body not found in HTML");
+                console.error("table-body not found");
                 return;
             }
 
             tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML =
+                    "<tr><td colspan='5'>⚠️ No data found</td></tr>";
+                return;
+            }
+
+            // Sort by robustness gap (LOWER = BETTER)
+            data.sort((a, b) => a.gap - b.gap);
 
             data.forEach((entry, i) => {
 
@@ -54,14 +60,14 @@ function loadData(file, element = null) {
                 tbody.appendChild(tr);
             });
 
-            // 🕒 Last updated time
-            const now = new Date();
-            const updatedEl = document.getElementById("last-updated");
-            if (updatedEl) {
-                updatedEl.textContent = "Last updated: " + now.toLocaleString();
+            // Last updated
+            const updated = document.getElementById("last-updated");
+            if (updated) {
+                updated.textContent =
+                    "Last updated: " + new Date().toLocaleString();
             }
 
-            // 🔄 Tab highlight
+            // Tab highlight
             document.querySelectorAll(".tab")
                 .forEach(t => t.classList.remove("active"));
 
@@ -71,16 +77,12 @@ function loadData(file, element = null) {
         .catch(err => {
             console.error(err);
 
-            const tbody = document.getElementById("table-body");
-
-            if (tbody) {
-                tbody.innerHTML =
-                    "<tr><td colspan='5'>⚠️ Failed to load leaderboard</td></tr>";
-            }
+            document.getElementById("table-body").innerHTML =
+                "<tr><td colspan='5'>❌ CSV NOT FOUND</td></tr>";
         });
 }
 
-// 🚀 Load default leaderboard on page load
+// Load default
 document.addEventListener("DOMContentLoaded", () => {
     loadData("leaderboard.csv");
 });
