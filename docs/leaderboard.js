@@ -13,10 +13,10 @@ function loadData(file, element = null) {
                 .map(r => r.split(","))
                 .filter(r => r.length >= 5)
                 .map(r => ({
-                    team: r[1],
-                    f1Ideal: parseFloat(r[2]),
-                    f1Pert: parseFloat(r[3]),
-                    gap: parseFloat(r[4])
+                   team: r[0],
+                    f1Ideal: parseFloat(r[1]),
+                    f1Pert: parseFloat(r[2]),
+                    gap: parseFloat(r[3])
                 }))
                 .filter(d => !isNaN(d.gap));
 
