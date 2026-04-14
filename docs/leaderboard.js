@@ -1,34 +1,40 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     fetch('leaderboard.csv')
-        .then(response => {
-            if (!response.ok) throw new Error("CSV not found");
-            return response.text();
+        .then(res => {
+            if (!res.ok) throw new Error("CSV not found");
+            return res.text();
         })
-        .then(csvText => {
+        .then(text => {
 
-            const rows = csvText.trim().split('\n').slice(1);
+            const rows = text.trim().split('\n').slice(1);
 
-            let data = rows
-                .map(row => row.split(','))
-                .filter(cols => cols.length >= 5)
-                .map(cols => ({
-                    team: cols[1],
-                    f1Ideal: parseFloat(cols[2]),
-                    f1Pert: parseFloat(cols[3]),
-                    gap: parseFloat(cols[4])
+            const data = rows
+                .map(r => r.split(','))
+                .filter(r => r.length >= 5)
+                .map(r => ({
+                    team: r[1],
+                    f1Ideal: parseFloat(r[2]),
+                    f1Pert: parseFloat(r[3]),
+                    gap: parseFloat(r[4])
                 }))
                 .filter(d => !isNaN(d.gap));
 
-            // SORT (important)
+            // Sort (VERY IMPORTANT)
             data.sort((a, b) => a.gap - b.gap);
 
-            const tbody = document.getElementById('table-body'); // FIXED
+            const tbody = document.getElementById('table-body');
+
+            if (!tbody) {
+                console.error("table-body not found");
+                return;
+            }
+
             tbody.innerHTML = '';
 
-            data.forEach((entry, index) => {
+            data.forEach((entry, i) => {
 
-                const rank = index + 1;
+                const rank = i + 1;
 
                 const medal =
                     rank === 1 ? '🥇' :
