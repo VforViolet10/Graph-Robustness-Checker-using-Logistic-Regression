@@ -1,3 +1,4 @@
-username,model,score,date
-Violet,LogisticRegression,0.91,2026-04-13
-TestUser,RandomForest,0.87,2026-04-13
+rank,team,f1_ideal,f1_perturbed,robustness_gap
+1,Team_A,0.85,0.80,0.05
+2,Team_B,0.82,0.78,0.04
+3,Team_C,0.80,0.75,0.05
