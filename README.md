@@ -44,24 +44,6 @@ Robustness Gap = F1_ideal − F1_perturbed
 ```
 
 
-```
-
----
-
-##  Dataset Description
-
-Each graph is represented using numerical features:
-
-| Feature     | Description           |
-|------------|----------------------|
-| graph_index | Unique ID            |
-| nodes       | Number of nodes      |
-| edges       | Number of edges      |
-| avg_degree  | Average degree       |
-| label       | Target class (0/1)   |
-
----
-
 ##  Model
 
 Baseline model:
