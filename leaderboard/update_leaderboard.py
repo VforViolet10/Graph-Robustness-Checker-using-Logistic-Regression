@@ -1,60 +1,46 @@
 import pandas as pd
 import os
+import glob
 
-# -------------------------------
-# FILE PATHS
-# -------------------------------
 LB_PATH = "docs/leaderboard.csv"
-SUB_PATH = "submission.csv"
+SUB_FOLDER = "submissions"
 
-# -------------------------------
-# LOAD FILES
-# -------------------------------
+# Load leaderboard
 if os.path.exists(LB_PATH):
     lb = pd.read_csv(LB_PATH)
 else:
-    lb = pd.DataFrame(columns=[
-        "rank", "team", "f1_ideal", "f1_perturbed", "robustness_gap"
-    ])
+    lb = pd.DataFrame(columns=["team", "f1_ideal", "f1_perturbed", "robustness_gap"])
 
-if not os.path.exists(SUB_PATH):
-    raise FileNotFoundError("❌ submission.csv not found")
+# Read ALL submissions
+files = glob.glob(f"{SUB_FOLDER}/*.csv")
 
-sub = pd.read_csv(SUB_PATH)
+all_subs = []
 
-# -------------------------------
-# VALIDATION
-# -------------------------------
-required_cols = ["team", "f1_ideal", "f1_perturbed"]
-for col in required_cols:
-    if col not in sub.columns:
-        raise Exception(f"Missing column: {col}")
+for file in files:
+    df = pd.read_csv(file)
+    all_subs.append(df)
 
-# -------------------------------
-# COMPUTE METRICS
-# -------------------------------
-sub["robustness_gap"] = sub["f1_ideal"] - sub["f1_perturbed"]
+if not all_subs:
+    raise Exception("No submissions found")
 
-# -------------------------------
-# UPDATE LEADERBOARD
-# -------------------------------
-lb = pd.concat([lb, sub], ignore_index=True)
+sub = pd.concat(all_subs, ignore_index=True)
 
-# Keep BEST score per team
-lb = lb.sort_values(by="f1_ideal", ascending=False)
-lb = lb.drop_duplicates(subset="team", keep="first")
+# Compute robustness gap if not present
+if "robustness_gap" not in sub.columns:
+    sub["robustness_gap"] = sub["f1_ideal"] - sub["f1_perturbed"]
 
-# Assign ranks
-lb = lb.reset_index(drop=True)
-lb["rank"] = lb.index + 1
+# Keep best per team
+sub = sub.sort_values(by="f1_ideal", ascending=False)
+sub = sub.drop_duplicates(subset="team", keep="first")
 
-# Reorder columns
-lb = lb[["rank", "team", "f1_ideal", "f1_perturbed", "robustness_gap"]]
+# Add rank
+sub = sub.reset_index(drop=True)
+sub["rank"] = sub.index + 1
 
-# -------------------------------
-# SAVE
-# -------------------------------
-lb.to_csv(LB_PATH, index=False)
+# Reorder
+sub = sub[["rank", "team", "f1_ideal", "f1_perturbed", "robustness_gap"]]
 
-print("🏆 Leaderboard updated!")
-print(lb.head())
+# Save leaderboard
+sub.to_csv(LB_PATH, index=False)
+
+print("🏆 Leaderboard updated successfully!")
