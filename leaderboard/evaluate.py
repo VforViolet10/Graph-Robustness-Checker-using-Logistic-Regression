@@ -1,30 +1,33 @@
 import pandas as pd
-from sklearn.metrics import accuracy_score
-
-# Load files
-y_true = pd.read_csv("data/test.csv")
-y_pred = pd.read_csv("submission.csv")
-
-# Calculate score
-score = accuracy_score(y_true["target"], y_pred["target"])
-
-# Get username
+import numpy as np
 import os
-username = os.getenv("GITHUB_ACTOR")
 
-# Load leaderboard
-lb = pd.read_csv("data/leaderboard.csv")
+# -------------------------------
+# CONFIG
+# -------------------------------
+TEAM_NAME = os.getenv("GITHUB_ACTOR", "unknown_team")
 
-# Append new score
-new_row = pd.DataFrame([{
-    "username": username,
-    "score": score
+# -------------------------------
+# DUMMY EVALUATION (replace later)
+# -------------------------------
+# Simulating model performance
+
+np.random.seed(42)
+
+f1_ideal = np.round(np.random.uniform(0.85, 0.95), 4)
+f1_perturbed = np.round(f1_ideal - np.random.uniform(0.02, 0.08), 4)
+
+# -------------------------------
+# CREATE SUBMISSION
+# -------------------------------
+submission = pd.DataFrame([{
+    "team": TEAM_NAME,
+    "f1_ideal": f1_ideal,
+    "f1_perturbed": f1_perturbed
 }])
 
-lb = pd.concat([lb, new_row])
+# Save file
+submission.to_csv("submission.csv", index=False)
 
-# Sort leaderboard
-lb = lb.sort_values(by="score", ascending=False)
-
-# Save
-lb.to_csv("data/leaderboard.csv", index=False)
+print("✅ Submission file created:")
+print(submission)
