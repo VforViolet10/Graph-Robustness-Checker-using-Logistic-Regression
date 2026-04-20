@@ -1,39 +1,27 @@
 import pandas as pd
 import os
 
-# File path
-file_path = "docs/leaderboard.csv"
+# Load leaderboard
+lb_path = "docs/leaderboard.csv"
 
-# Load leaderboard (create if not exists)
-if os.path.exists(file_path):
-    lb = pd.read_csv(file_path)
+if os.path.exists(lb_path):
+    lb = pd.read_csv(lb_path)
 else:
-    lb = pd.DataFrame(columns=["team", "f1_ideal", "f1_perturbed", "gap"])
+    lb = pd.DataFrame(columns=["team", "f1_ideal", "f1_perturbed", "robustness_gap"])
 
-# Team name from PR
-team_name = os.getenv("GITHUB_ACTOR", "Unknown")
+# Get submission file
+sub = pd.read_csv("submission.csv")
 
-# 🔥 Replace with real evaluation later
-f1_ideal = 0.90
-f1_perturbed = 0.85
-gap = round(f1_ideal - f1_perturbed, 4)
+# Calculate robustness gap
+sub["robustness_gap"] = sub["f1_ideal"] - sub["f1_perturbed"]
 
-# Create new row
-new_row = {
-    "team": team_name,
-    "f1_ideal": f1_ideal,
-    "f1_perturbed": f1_perturbed,
-    "gap": gap
-}
+# Append
+lb = pd.concat([lb, sub], ignore_index=True)
 
-# ❗ Remove old entry of same team (avoid duplicates)
-lb = lb[lb["team"] != team_name]
-
-# Add new row
-lb = pd.concat([lb, pd.DataFrame([new_row])], ignore_index=True)
-
-# ✅ Sort: lowest gap is best
-lb = lb.sort_values(by="gap", ascending=True)
+# Sort leaderboard
+lb = lb.sort_values(by="f1_ideal", ascending=False)
 
 # Save
-lb.to_csv(file_path, index=False)
+lb.to_csv(lb_path, index=False)
+
+print("Leaderboard updated!")
