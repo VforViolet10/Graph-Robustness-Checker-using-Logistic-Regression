@@ -3,7 +3,7 @@ import os
 import glob
 
 LB_PATH = "docs/leaderboard.csv"
-SUB_FOLDER = "submissions"
+SUB_FOLDER = "submissions/*.csv"
 
 # Load leaderboard
 if os.path.exists(LB_PATH):
