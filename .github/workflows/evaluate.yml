@@ -6,6 +6,7 @@ on:
 
 jobs:
   update:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     permissions:
@@ -24,7 +25,7 @@ jobs:
         run: pip install pandas
 
       - name: Run leaderboard update
-        run: python leaderboard/update_leaderboard.py
+        run: python update_leaderboard.py   # adjust if needed
 
       - name: Commit leaderboard
         run: |
@@ -32,4 +33,4 @@ jobs:
           git config user.email "bot@github.com"
           git add docs/leaderboard.csv
           git commit -m "Auto update leaderboard" || echo "No changes"
-          git push
+          git push origin main
