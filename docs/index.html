@@ -1,130 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Graph Robustness Leaderboard</title>
-
-<style>
-body {
-    font-family: "Segoe UI", Arial;
-    margin: 0;
-    background: #ffffff;
-    color: #111;
-}
-
-.header {
-    padding: 25px;
-    text-align: center;
-    border-bottom: 2px solid #eee;
-}
-
-.header h1 {
-    margin: 0;
-    font-size: 28px;
-}
-
-.header p {
-    color: #666;
-}
-
-.container {
-    width: 90%;
-    margin: auto;
-    margin-top: 30px;
-}
-
-.tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.tab {
-    padding: 10px 18px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background: #fafafa;
-    border-radius: 6px;
-}
-
-.tab.active {
-    background: #2563eb;
-    color: white;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 15px;
-}
-
-th {
-    background: #f5f5f5;
-    padding: 12px;
-    text-align: left;
-    border-bottom: 2px solid #ddd;
-}
-
-td {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-}
-
-tr:hover {
-    background: #f9f9f9;
-}
-
-.footer {
-    text-align: center;
-    margin: 30px;
-    font-size: 13px;
-    color: #777;
-}
-</style>
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+        }
+        table {
+            margin: auto;
+            border-collapse: collapse;
+            width: 70%;
+            background: white;
+            color: black;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #6366f1;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="header">
-    <h1>🏆 Graph Robustness Leaderboard</h1>
-    <p>ML Challenge • PR Submission System</p>
-</div>
+<h1>🏆 Graph Robustness Leaderboard</h1>
 
-<div class="container">
+<table id="leaderboard"></table>
 
-    <!-- Tabs -->
-    <div class="tabs">
-        <div class="tab active" onclick="loadData('leaderboard.csv', this)">
-            Public Leaderboard
-        </div>
-        <div class="tab" onclick="loadData('private.csv', this)">
-            Private Leaderboard
-        </div>
-    </div>
+<script>
+fetch('leaderboard.csv')
+.then(response => response.text())
+.then(data => {
+    const rows = data.split('\n').map(r => r.split(','));
+    let html = "";
 
-    <!-- Table -->
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Team</th>
-                <th>F1 Ideal</th>
-                <th>F1 Perturbed</th>
-                <th>Robustness Gap</th>
-            </tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-    </table>
+    rows.forEach((row, i) => {
+        html += "<tr>";
+        row.forEach(col => {
+            html += i === 0 ? `<th>${col}</th>` : `<td>${col}</td>`;
+        });
+        html += "</tr>";
+    });
 
-    <p id="last-updated" style="margin-top:10px; color:#666;"></p>
+    document.getElementById("leaderboard").innerHTML = html;
+});
+</script>
 
-</div>
-
-<div class="footer">
-    Built for Graph Robustness Challenge 🚀
-</div>
-
-
-<script src="leaderboard.js"></script>
 </body>
 </html>
