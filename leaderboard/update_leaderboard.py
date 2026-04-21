@@ -2,8 +2,8 @@ import pandas as pd
 import os
 import glob
 
-LB_PATH = "docs/leaderboard.json"
-SUB_FOLDER = "submissions/*.csv"
+LB_PATH = "docs/leaderboard.csv"
+SUB_FOLDER = "submissions"
 
 # Load leaderboard
 if os.path.exists(LB_PATH):
