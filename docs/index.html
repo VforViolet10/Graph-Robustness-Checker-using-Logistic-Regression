@@ -130,7 +130,7 @@ async function loadLeaderboard() {
         <tr>
           <td class="medal">${rank}</td>
           <td>${entry.group}</td>
-          <td>${entry.f1_score.toFixed(4)}</td>
+          <td>${entry.f1_score ? entry.f1_score.toFixed(4) : "N/A"}</td>
           <td>#${entry.pr || "-"}</td>
         </tr>
       `;
