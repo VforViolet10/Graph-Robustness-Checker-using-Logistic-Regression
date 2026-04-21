@@ -1,55 +1,155 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-    <title>Leaderboard</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #0f172a;
-            color: white;
-            text-align: center;
-        }
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 70%;
-            background: white;
-            color: black;
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ccc;
-        }
-        th {
-            background: #6366f1;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>🏆 Graph Robustness Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: 2.2rem;
+    }
+
+    p {
+      opacity: 0.8;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #1e293b;
+    }
+
+    th {
+      background: #334155;
+      padding: 14px;
+      font-size: 1rem;
+    }
+
+    td {
+      padding: 12px;
+    }
+
+    tr:nth-child(even) {
+      background: #0f172a;
+    }
+
+    tr:hover {
+      background: #475569;
+      transition: 0.2s;
+    }
+
+    .medal {
+      font-size: 1.2rem;
+    }
+
+    #last-updated {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  </style>
+
 </head>
 
 <body>
 
-<h1>🏆 Graph Robustness Leaderboard</h1>
+<header>
+  <h1>🏆 Graph Robustness Challenge</h1>
+  <p>Live leaderboard powered by GitHub Actions</p>
+</header>
 
-<table id="leaderboard"></table>
+<div class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Team</th>
+        <th>F1 Score</th>
+        <th>PR</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard-body">
+      <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <p id="last-updated"></p>
+</div>
+
+<footer>
+  ⚡ Auto-refresh every 5 seconds
+</footer>
 
 <script>
-fetch('leaderboard.csv')
-.then(response => response.text())
-.then(data => {
-    const rows = data.split('\n').map(r => r.split(','));
-    let html = "";
+async function loadLeaderboard() {
+  try {
+    const res = await fetch("leaderboard.json?t=" + Date.now());
+    const data = await res.json();
 
-    rows.forEach((row, i) => {
-        html += "<tr>";
-        row.forEach(col => {
-            html += i === 0 ? `<th>${col}</th>` : `<td>${col}</td>`;
-        });
-        html += "</tr>";
+    // Sort descending by score
+    data.sort((a, b) => b.f1_score - a.f1_score);
+
+    const tbody = document.getElementById("leaderboard-body");
+    tbody.innerHTML = "";
+
+    data.forEach((entry, index) => {
+      const medals = ["🥇", "🥈", "🥉"];
+      const rank = medals[index] || (index + 1);
+
+      const row = `
+        <tr>
+          <td class="medal">${rank}</td>
+          <td>${entry.group}</td>
+          <td>${entry.f1_score.toFixed(4)}</td>
+          <td>#${entry.pr || "-"}</td>
+        </tr>
+      `;
+      tbody.innerHTML += row;
     });
 
-    document.getElementById("leaderboard").innerHTML = html;
-});
+    document.getElementById("last-updated").innerText =
+      "Last updated: " + new Date().toLocaleString();
+
+  } catch (error) {
+    document.getElementById("leaderboard-body").innerHTML =
+      "<tr><td colspan='4'>Error loading leaderboard</td></tr>";
+    console.error(error);
+  }
+}
+
+// Auto refresh every 5 sec
+setInterval(loadLeaderboard, 5000);
+loadLeaderboard();
 </script>
 
 </body>
