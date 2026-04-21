@@ -16,8 +16,6 @@ The goal is to build models that are **accurate + robust under noise**.
 
 ---
 
----
-
 ##  Objective
 
 Participants must generate predictions for:
