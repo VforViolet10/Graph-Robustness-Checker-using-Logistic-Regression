@@ -113,11 +113,21 @@
 <script>
 async function loadLeaderboard() {
   try {
-    const res = await fetch("leaderboard.json?t=" + Date.now());
+    const res = await fetch("./leaderboard.json?t=" + Date.now());
     const data = await res.json();
+    if (!data || data.length === 0) {
+  document.getElementById("leaderboard-body").innerHTML =
+    "<tr><td colspan='4'>No submissions yet</td></tr>";
+  return;
+}
 
     // Sort descending by score
     data.sort((a, b) => b.f1_score - a.f1_score);
+    if (!data || data.length === 0) {
+  document.getElementById("leaderboard-body").innerHTML =
+    "<tr><td colspan='4'>No submissions yet</td></tr>";
+  return;
+}
 
     const tbody = document.getElementById("leaderboard-body");
     tbody.innerHTML = "";
