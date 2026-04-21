@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import glob
 
-LB_PATH = "docs/leaderboard.csv"
+LB_PATH = "docs/leaderboard.json"
 SUB_FOLDER = "submissions/*.csv"
 
 # Load leaderboard
