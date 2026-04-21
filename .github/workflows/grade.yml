@@ -85,6 +85,8 @@ jobs:
           # Load new result
           with open(result_path) as f:
               new = json.load(f)
+          # FORCE correct team name
+              new["group"] = os.getenv("GROUP_NAME")
 
           # Add PR number
           new["pr"] = int(os.getenv("PR_NUMBER"))
