@@ -36,6 +36,12 @@ sub = sub.drop_duplicates(subset="team", keep="first")
 # Add rank
 sub = sub.reset_index(drop=True)
 sub["rank"] = sub.index + 1
+sub = sub.rename(columns={
+    "team": "group",
+    "f1_ideal": "f1_score"
+})
+
+sub["pr"] = sub["rank"]
 
 # Reorder
 sub = sub[["rank", "team", "f1_ideal", "f1_perturbed", "robustness_gap"]]
