@@ -1,0 +1,17 @@
+[
+{
+"group": "team_alpha",
+"f1_score": 0.9123,
+"pr": 1
+},
+{
+"group": "data_warriors",
+"f1_score": 0.8935,
+"pr": 2
+},
+{
+"group": "ai_legends",
+"f1_score": 0.8652,
+"pr": 3
+}
+]
