@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import glob
 
-LB_PATH = "docs/leaderboard.csv"
+LB_PATH = "docs/leaderboard.json"
 SUB_FOLDER = "submissions"
 
 # Load leaderboard
@@ -41,6 +41,5 @@ sub["rank"] = sub.index + 1
 sub = sub[["rank", "team", "f1_ideal", "f1_perturbed", "robustness_gap"]]
 
 # Save leaderboard
-sub.to_csv(LB_PATH, index=False)
-
+sub.to_json(LB_PATH, orient="records", indent=4)
 print("🏆 Leaderboard updated successfully!")
