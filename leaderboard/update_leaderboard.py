@@ -4,7 +4,7 @@ import glob
 import json
 
 LB_PATH = "docs/leaderboard.json"
-SUB_FOLDER = "submission"
+SUB_FOLDER = "submission/*.csv"
 
 # -----------------------------
 
