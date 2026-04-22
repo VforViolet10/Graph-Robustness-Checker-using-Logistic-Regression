@@ -10,11 +10,14 @@ permissions:
 
 jobs:
   grade:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true &&
+        github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -32,6 +35,12 @@ jobs:
         run: |
           git config --global user.name github-actions
           git config --global user.email github-actions@github.com
+
           git add docs/leaderboard.json
-          git diff --cached --quiet || git commit -m "Auto update leaderboard"
-          git push
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto update leaderboard"
+            git push origin main
+          else
+            echo "No leaderboard changes"
+          fi
