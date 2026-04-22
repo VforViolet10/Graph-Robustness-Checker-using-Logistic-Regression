@@ -1,38 +1,58 @@
+<script>
 async function loadLeaderboard() {
-try {
-const res = await fetch("leaderboard.json?t=" + Date.now());
-const data = await res.json();
+  try {
+    const res = await fetch(
+      "leaderboard.json?t=" + Date.now(),
+      { cache: "no-store" }
+    );
 
-```
-// Sort descending
-data.sort((a, b) => b.f1_score - a.f1_score);
+    if (!res.ok) {
+      throw new Error("Could not load leaderboard.json");
+    }
 
-const tbody = document.getElementById("leaderboard-body");
-tbody.innerHTML = "";
+    const data = await res.json();
 
-data.forEach((entry, index) => {
-  const medal = ["🥇", "🥈", "🥉"][index] || (index + 1);
+    const tbody = document.getElementById("leaderboard-body");
 
-  const row = `
-    <tr>
-      <td>${medal}</td>
-      <td>${entry.group}</td>
-      <td>${entry.f1_score.toFixed(4)}</td>
-      <td>#${entry.pr || "-"}</td>
-    </tr>
-  `;
-  tbody.innerHTML += row;
-});
+    if (!data || data.length === 0) {
+      tbody.innerHTML =
+        "<tr><td colspan='4'>No submissions yet</td></tr>";
+      return;
+    }
 
-document.getElementById("last-updated").innerText =
-  "Last updated: " + new Date().toLocaleString();
-```
+    // Sort descending
+    data.sort((a,b)=>b.f1_score-a.f1_score);
 
-} catch (err) {
-console.error("Error loading leaderboard:", err);
+    tbody.innerHTML = "";
+
+    data.forEach((entry,index)=>{
+      const medal=["🥇","🥈","🥉"][index] || (index+1);
+
+      tbody.innerHTML += `
+      <tr>
+        <td>${medal}</td>
+        <td>${entry.group || "Unknown"}</td>
+        <td>${
+          entry.f1_score !== undefined
+            ? Number(entry.f1_score).toFixed(4)
+            : "N/A"
+        }</td>
+        <td>#${entry.pr || "-"}</td>
+      </tr>
+      `;
+    });
+
+    document.getElementById("last-updated").innerText =
+      "Last updated: " + new Date().toLocaleString();
+
+  } catch(err){
+    console.error("Error loading leaderboard:", err);
+
+    document.getElementById("leaderboard-body").innerHTML =
+      "<tr><td colspan='4'>Error loading leaderboard</td></tr>";
+  }
 }
-}
 
-// Refresh every 5 sec
-setInterval(loadLeaderboard, 5000);
 loadLeaderboard();
+setInterval(loadLeaderboard, 5000);
+</script>
