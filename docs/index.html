@@ -1,54 +1,219 @@
-<script>
-async function loadLeaderboard() {
-  try {
-    const res = await fetch(
-      "./leaderboard.json?nocache=" + Date.now(),
-      { cache: "no-store" }
-    );
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🏆 Graph Robustness Leaderboard</title>
 
-    if (!res.ok) throw new Error("Leaderboard file not found");
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,sans-serif;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  text-align:center;
+}
+
+header{
+  padding:28px 20px 12px;
+}
+
+h1{
+  margin:0;
+  font-size:2.2rem;
+}
+
+.subtitle{
+  opacity:.8;
+  margin-top:10px;
+}
+
+.container{
+  max-width:950px;
+  margin:auto;
+  padding:20px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  background:#1e293b;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+th{
+  background:#334155;
+  padding:14px;
+}
+
+td{
+  padding:13px;
+}
+
+tr:nth-child(even){
+  background:#0f172a;
+}
+
+tr:hover{
+  background:#475569;
+}
+
+.medal{
+  font-size:1.2rem;
+}
+
+#status{
+  margin-top:18px;
+  opacity:.8;
+  font-size:.95rem;
+}
+
+footer{
+  margin:30px 0;
+  opacity:.6;
+  font-size:.85rem;
+}
+
+.badge{
+ display:inline-block;
+ background:#334155;
+ padding:8px 14px;
+ border-radius:999px;
+ margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏆 Graph Robustness Challenge</h1>
+  <div class="subtitle">
+    Live leaderboard powered by GitHub Actions
+  </div>
+
+  <div class="badge">
+    Auto-refresh every 5 seconds
+  </div>
+</header>
+
+<div class="container">
+
+<table>
+<thead>
+<tr>
+  <th>Rank</th>
+  <th>Team</th>
+  <th>F1 Score</th>
+  <th>PR</th>
+</tr>
+</thead>
+
+<tbody id="leaderboard-body">
+<tr>
+<td colspan="4">Loading leaderboard...</td>
+</tr>
+</tbody>
+</table>
+
+<div id="status">Fetching latest results...</div>
+
+</div>
+
+<footer>
+Updated automatically after merged pull requests
+</footer>
+
+<script>
+async function loadLeaderboard(){
+  try{
+
+    // Same folder as index.html
+    const url = "leaderboard.json?nocache=" + Date.now();
+
+    const res = await fetch(url,{
+      cache:"no-store"
+    });
+
+    if(!res.ok){
+      throw new Error(
+        "Could not load leaderboard.json ("+res.status+")"
+      );
+    }
 
     const data = await res.json();
 
-    const tbody = document.getElementById("leaderboard-body");
+    const tbody = document.getElementById(
+      "leaderboard-body"
+    );
 
-    if (!data || data.length === 0) {
-      tbody.innerHTML =
-        "<tr><td colspan='4'>No submissions yet</td></tr>";
+    if(!Array.isArray(data) || data.length===0){
+      tbody.innerHTML=
+       "<tr><td colspan='4'>No submissions yet</td></tr>";
+
+      document.getElementById("status").innerText=
+       "Waiting for submissions...";
       return;
     }
 
-    data.sort((a,b)=>b.f1_score-a.f1_score);
+    // Sort highest score first
+    data.sort(
+      (a,b)=>
+      Number(b.f1_score||0)-Number(a.f1_score||0)
+    );
 
-    tbody.innerHTML = "";
+    tbody.innerHTML="";
 
     data.forEach((entry,index)=>{
+
       const medals=["🥇","🥈","🥉"];
-      const rank = medals[index] || (index+1);
+      const rank=
+        medals[index] || (index+1);
+
+      const score=
+        entry.f1_score !== undefined
+        ? Number(entry.f1_score).toFixed(4)
+        : "N/A";
 
       tbody.innerHTML += `
-        <tr>
-          <td>${rank}</td>
-          <td>${entry.group}</td>
-          <td>${Number(entry.f1_score).toFixed(4)}</td>
-          <td>#${entry.pr || "-"}</td>
-        </tr>
+      <tr>
+        <td class="medal">${rank}</td>
+        <td>${entry.group || "Unknown"}</td>
+        <td>${score}</td>
+        <td>#${entry.pr || "-"}</td>
+      </tr>
       `;
     });
 
-    document.getElementById("last-updated").innerText =
-      "Last updated: " + new Date().toLocaleString();
+    document.getElementById("status").innerText =
+      "Last updated: " +
+      new Date().toLocaleString();
 
   } catch(err){
-    document.getElementById("leaderboard-body").innerHTML =
+
+    console.error(
+      "Leaderboard load error:",
+      err
+    );
+
+    document.getElementById(
+      "leaderboard-body"
+    ).innerHTML=
       "<tr><td colspan='4'>Error loading leaderboard</td></tr>";
 
-    console.error("Leaderboard load error:", err);
+    document.getElementById("status").innerText =
+      "Check that leaderboard.json exists in docs/";
   }
 }
 
+// Initial load
 loadLeaderboard();
 
-/* auto-refresh */
-setInterval(loadLeaderboard, 5000);
+// Refresh every 5 sec
+setInterval(loadLeaderboard,5000);
 </script>
+
+</body>
+</html>
