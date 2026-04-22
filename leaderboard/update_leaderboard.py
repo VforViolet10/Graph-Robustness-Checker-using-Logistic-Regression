@@ -1,97 +1,71 @@
 import pandas as pd
+import sys
 import os
 import glob
 import json
+from datetime import datetime
+from sklearn.metrics import f1_score
 
-LB_PATH = "docs/leaderboard.json"
-SUB_FOLDER = "submission"
+def find_submission():
+    patterns = [
+        "submission/submission.csv",
+        "submission/*_submission.csv"
+    ]
+    for pattern in patterns:
+        files = glob.glob(pattern)
+        if files:
+            print(f"✅ Found submission file: {files[0]}")
+            return files[0]
+    print("❌ No submission file found!")
+    print("   Name your file like: group1_submission.csv")
+    sys.exit(1)
 
-# -----------------------------
+def grade(submission_path, labels_path):
+    try:
+        submission = pd.read_csv(submission_path)
+        labels     = pd.read_csv(labels_path)
+    except Exception as e:
+        print(f"❌ Could not read files: {e}")
+        sys.exit(1)
 
-# Load existing leaderboard
+    if "prediction" not in submission.columns:
+        print("❌ Your file must have a column named 'prediction'")
+        sys.exit(1)
 
-# -----------------------------
+    if len(submission) != len(labels):
+        print(f"❌ Row count mismatch: got {len(submission)}, expected {len(labels)}")
+        sys.exit(1)
 
-if os.path.exists(LB_PATH):
-with open(LB_PATH) as f:
-lb = json.load(f)
-else:
-lb = []
+    y_true = labels["target"].values
+    y_pred = submission["prediction"].values
 
-# -----------------------------
+    f1      = round(f1_score(y_true, y_pred), 4)
+    correct = (y_pred == y_true).sum()
+    total   = len(y_true)
+    acc     = round(correct / total * 100, 2)
 
-# Read all submissions
+    print(f"✅ F1 Score:  {f1}")
+    print(f"✅ Accuracy:  {acc}%  ({correct}/{total} correct)")
 
-# -----------------------------
+    group_name = os.environ.get("GROUP_NAME", "unknown")
+    pr_number  = os.environ.get("PR_NUMBER", "0")
 
-files = glob.glob(f"{SUB_FOLDER}/*.csv")
+    result = {
+        "group":    group_name,
+        "f1_score": f1,
+        "accuracy": acc,
+        "correct":  int(correct),
+        "total":    int(total),
+        "pr":       pr_number,
+        "date":     datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    }
 
-if not files:
-raise Exception("No submissions found")
+    os.makedirs("leaderboard_data", exist_ok=True)
+    with open("leaderboard_data/result.json", "w") as f:
+        json.dump(result, f)
 
-all_subs = []
+    print(f"📊 Result saved!")
 
-for file in files:
-df = pd.read_csv(file)
-all_subs.append(df)
-
-sub = pd.concat(all_subs, ignore_index=True)
-
-# -----------------------------
-
-# Validation
-
-# -----------------------------
-
-required = ["team", "f1_ideal", "f1_perturbed"]
-
-for col in required:
-if col not in sub.columns:
-raise Exception(f"Missing column: {col}")
-
-# -----------------------------
-
-# Compute robustness gap
-
-# -----------------------------
-
-sub["robustness_gap"] = sub["f1_ideal"] - sub["f1_perturbed"]
-
-# -----------------------------
-
-# Keep best per team
-
-# -----------------------------
-
-sub = sub.sort_values(by="f1_ideal", ascending=False)
-sub = sub.drop_duplicates(subset="team", keep="first")
-
-# -----------------------------
-
-# Convert to leaderboard format
-
-# -----------------------------
-
-sub = sub.reset_index(drop=True)
-
-leaderboard = []
-
-for i, row in sub.iterrows():
-leaderboard.append({
-"group": row["team"],
-"f1_score": float(row["f1_ideal"]),
-"f1_perturbed": float(row["f1_perturbed"]),
-"robustness_gap": float(row["robustness_gap"]),
-"pr": i + 1
-})
-
-# -----------------------------
-
-# Save leaderboard
-
-# -----------------------------
-
-with open(LB_PATH, "w") as f:
-json.dump(leaderboard, f, indent=2)
-
-print("🏆 Leaderboard updated successfully!")
+if __name__ == "__main__":
+    submission_path = find_submission()
+    grade(submission_path, "grader/test_labels.csv")
