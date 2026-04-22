@@ -6,82 +6,82 @@
 <title>🏆 Graph Robustness Leaderboard</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI,sans-serif;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-  color:white;
-  text-align:center;
+body {
+  margin: 0;
+  font-family: Segoe UI, sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  text-align: center;
 }
 
-header{
-  padding:28px 20px 12px;
+header {
+  padding: 28px 20px 12px;
 }
 
-h1{
-  margin:0;
-  font-size:2.2rem;
+h1 {
+  margin: 0;
+  font-size: 2.2rem;
 }
 
-.subtitle{
-  opacity:.8;
-  margin-top:10px;
+.subtitle {
+  opacity: .8;
+  margin-top: 10px;
 }
 
-.container{
-  max-width:950px;
-  margin:auto;
-  padding:20px;
+.container {
+  max-width: 950px;
+  margin: auto;
+  padding: 20px;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-  background:#1e293b;
-  border-radius:14px;
-  overflow:hidden;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #1e293b;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
-th{
-  background:#334155;
-  padding:14px;
+th {
+  background: #334155;
+  padding: 14px;
 }
 
-td{
-  padding:13px;
+td {
+  padding: 13px;
 }
 
-tr:nth-child(even){
-  background:#0f172a;
+tr:nth-child(even) {
+  background: #0f172a;
 }
 
-tr:hover{
-  background:#475569;
+tr:hover {
+  background: #475569;
 }
 
-.medal{
-  font-size:1.2rem;
+.medal {
+  font-size: 1.2rem;
 }
 
-#status{
-  margin-top:18px;
-  opacity:.8;
-  font-size:.95rem;
+#status {
+  margin-top: 18px;
+  opacity: .8;
+  font-size: .95rem;
 }
 
-footer{
-  margin:30px 0;
-  opacity:.6;
-  font-size:.85rem;
+footer {
+  margin: 30px 0;
+  opacity: .6;
+  font-size: .85rem;
 }
 
-.badge{
- display:inline-block;
- background:#334155;
- padding:8px 14px;
- border-radius:999px;
- margin-top:15px;
+.badge {
+  display: inline-block;
+  background: #334155;
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -127,80 +127,81 @@ Updated automatically after merged pull requests
 </footer>
 
 <script>
-async function loadLeaderboard(){
-  try{
+// Utility function to prevent Cross-Site Scripting (XSS)
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
+async function loadLeaderboard() {
+  try {
     // Same folder as index.html
     const url = "leaderboard.json?nocache=" + Date.now();
 
-    const res = await fetch(url,{
-      cache:"no-store"
+    const res = await fetch(url, {
+      cache: "no-store"
     });
 
-    if(!res.ok){
-      throw new Error(
-        "Could not load leaderboard.json ("+res.status+")"
-      );
+    if (!res.ok) {
+      throw new Error("Could not load leaderboard.json (" + res.status + ")");
     }
 
     const data = await res.json();
+    const tbody = document.getElementById("leaderboard-body");
 
-    const tbody = document.getElementById(
-      "leaderboard-body"
-    );
-
-    if(!Array.isArray(data) || data.length===0){
-      tbody.innerHTML=
-       "<tr><td colspan='4'>No submissions yet</td></tr>";
-
-      document.getElementById("status").innerText=
-       "Waiting for submissions...";
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='4'>No submissions yet</td></tr>";
+      document.getElementById("status").innerText = "Waiting for submissions...";
       return;
     }
 
-    // Sort highest score first
-    data.sort(
-      (a,b)=>
-      Number(b.f1_score||0)-Number(a.f1_score||0)
-    );
+    // Sort highest score first safely (handling missing/undefined scores)
+    data.sort((a, b) => {
+      const scoreA = a.f1_score !== undefined ? Number(a.f1_score) : -Infinity;
+      const scoreB = b.f1_score !== undefined ? Number(b.f1_score) : -Infinity;
+      return scoreB - scoreA;
+    });
 
-    tbody.innerHTML="";
+    // Build the HTML string in memory to improve DOM rendering performance
+    let rowsHTML = "";
 
-    data.forEach((entry,index)=>{
+    data.forEach((entry, index) => {
+      const medals = ["🥇", "🥈", "🥉"];
+      const rank = medals[index] || (index + 1);
 
-      const medals=["🥇","🥈","🥉"];
-      const rank=
-        medals[index] || (index+1);
-
-      const score=
-        entry.f1_score !== undefined
+      const score = entry.f1_score !== undefined
         ? Number(entry.f1_score).toFixed(4)
         : "N/A";
 
-      tbody.innerHTML += `
+      // Escape user-generated inputs
+      const safeGroup = escapeHTML(entry.group || "Unknown");
+      const safePR = escapeHTML(entry.pr || "-");
+
+      rowsHTML += `
       <tr>
         <td class="medal">${rank}</td>
-        <td>${entry.group || "Unknown"}</td>
+        <td>${safeGroup}</td>
         <td>${score}</td>
-        <td>#${entry.pr || "-"}</td>
+        <td>#${safePR}</td>
       </tr>
       `;
     });
 
+    // Update the DOM exactly once
+    tbody.innerHTML = rowsHTML;
+
     document.getElementById("status").innerText =
-      "Last updated: " +
-      new Date().toLocaleString();
+      "Last updated: " + new Date().toLocaleString();
 
-  } catch(err){
+  } catch(err) {
+    console.error("Leaderboard load error:", err);
 
-    console.error(
-      "Leaderboard load error:",
-      err
-    );
-
-    document.getElementById(
-      "leaderboard-body"
-    ).innerHTML=
+    document.getElementById("leaderboard-body").innerHTML =
       "<tr><td colspan='4'>Error loading leaderboard</td></tr>";
 
     document.getElementById("status").innerText =
@@ -212,7 +213,7 @@ async function loadLeaderboard(){
 loadLeaderboard();
 
 // Refresh every 5 sec
-setInterval(loadLeaderboard,5000);
+setInterval(loadLeaderboard, 5000);
 </script>
 
 </body>
