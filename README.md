@@ -73,7 +73,7 @@ x ← x + N(0, 0.05)
 
 ##  Submission Format (IMPORTANT)
 
-###  Do NOT submit rank manually
+##  Do NOT submit rank manually
 
 ###  Correct format:
 
@@ -139,12 +139,9 @@ python starter_code/baseline.py
 
 ---
 
-
 ##  License
 
 MIT License — open for academic and hackathon use.
 
 ---
-
-
 
